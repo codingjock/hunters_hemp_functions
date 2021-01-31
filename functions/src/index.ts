@@ -10,18 +10,32 @@ admin.initializeApp();
 // // https://firebase.google.com/docs/functions/typescript
 //
 export const joinMailingList = functions.https.onRequest(async (request, response) => {
-  response.set("Access-Control-Allow-Origin", "*"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
-  response.set("Access-Control-Allow-Headers", "Content-Type");
-  const db = admin.firestore();
-  await db.collection('users').doc(request.body["email"]).set({
-    "email": request.body["email"],
-    "emailOptIn": true,
-    "emailOptInDateTime": new Date().toUTCString()
-  }, { merge: true });
+	functions.logger.info(request.body, { structuredData: true });
+	response.set("Access-Control-Allow-Origin", "*"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
+	// response.set("Access-Control-Allow-Origin", "http://localhost:64489, https://www.huntershempmt.com, https://huntershempmt.com"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
+	response.set("Access-Control-Allow-Headers", "Content-Type");
+	response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  try {
+	const db = admin.firestore();
+	var body = JSON.parse(request.body);
+	console.log(body);
+	await db.collection('hunters_hemp_users').doc(body["email"]).set({
+		"email": body["email"],
+		"emailOptIn": true,
+		"emailOptInDateTime": new Date().toUTCString()
+	}, { merge: true });
+	response.send(body);
+  } catch (error) {
+	console.log(error);
+    response.status(400).send({
+      errorText: "An error occured while trying to process your request"
+    });
+  }
+  
 });
 export const createOrder = functions.https.onRequest(async (request, response) => {
   functions.logger.info("Hello logs!", { structuredData: true });
-  response.set("Access-Control-Allow-Origin", "http://localhost:64489, https://www.huntershempmt.com, https://huntershempmt.com"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
+  response.set("Access-Control-Allow-Origin", "*"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
   response.set("Access-Control-Allow-Headers", "Content-Type");
   response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   try {
