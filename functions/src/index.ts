@@ -19,13 +19,14 @@ export const joinMailingList = functions.https.onRequest(async (request, respons
     "emailOptInDateTime": new Date().toUTCString()
   }, { merge: true });
 });
-export const createOrder = functions.https.onRequest((request, response) => {
+export const createOrder = functions.https.onRequest(async (request, response) => {
   functions.logger.info("Hello logs!", { structuredData: true });
-  response.set("Access-Control-Allow-Origin", "*"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
+  response.set("Access-Control-Allow-Origin", "http://localhost:64489, https://www.huntershempmt.com, https://huntershempmt.com"); // you can also whitelist a specific domain like "http://127.0.0.1:4000"
   response.set("Access-Control-Allow-Headers", "Content-Type");
+  response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   try {
     let orderId: string = uid(8);
-    var body = request.body;
+    var body = JSON.parse(request.body);
     // request.body["order_number"] = orderId;
     console.log(request.body);
     sgMail.setApiKey("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");
@@ -58,17 +59,18 @@ export const createOrder = functions.https.onRequest((request, response) => {
       templateId: "d-c79c085b1a904832a28df63886c47347",
       dynamicTemplateData: orderData,
     };
-    console.log(msg);
+	console.log(msg);
+
+	const db = admin.firestore();
+	const res = await db.collection("hunters_hemp_orders").doc(orderData.order_number).set(orderData);
+	console.log(res);
+	response.send(orderData);
 
     sgMail
       .send(msg)
       .then(async () => {
         console.log("Email sent");
-        const db = admin.firestore();
-
-        const res = await db.collection("orders").doc(orderData.order_number).set(orderData);
-        console.log(res);
-        response.send(orderData);
+        
       })
       .catch((error) => {
         console.error(error);
